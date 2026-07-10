@@ -1,0 +1,537 @@
+<!--
+  node-red-contrib-topmenu
+  Turns Node-RED's existing main menu into a responsive horizontal menu.
+  No menu entries are copied: moving the live DOM nodes preserves Node-RED and
+  third-party handlers, state, translations and ids.
+-->
+<style>
+    #red-ui-header.topmenu-active {
+        display: flex;
+        align-items: stretch;
+    }
+
+    #red-ui-header.topmenu-active #red-ui-header-logo,
+    #red-ui-header.topmenu-active #red-ui-header-toolbar {
+        flex: 0 0 auto;
+    }
+
+    #red-ui-header.topmenu-active #red-ui-header-logo {
+        width: auto !important;
+        min-width: max-content;
+    }
+
+    #red-ui-topmenu {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 40px;
+        margin: 0 4px 0 16px;
+        position: relative;
+        z-index: auto;
+    }
+
+    #red-ui-topmenu > .red-ui-menu {
+        position: static !important;
+        display: flex !important;
+        align-items: center;
+        width: max-content;
+        min-width: 0;
+        height: 40px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+        list-style: none;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li {
+        display: block;
+        position: relative;
+        float: none !important;
+        height: 32px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        white-space: nowrap;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.red-ui-menu-divider {
+        width: 1px;
+        height: 20px;
+        margin: 10px 2px;
+        padding: 0;
+        background: rgba(255,255,255,.22);
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li > a {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        height: 32px;
+        padding: 0 6px;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 3px;
+        color: inherit;
+        background: rgba(255,255,255,.13);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 1px 1px rgba(0,0,0,.12);
+        line-height: 32px;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li:not(.disabled) > a:hover,
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-open > a,
+    #red-ui-topmenu > .red-ui-menu > li > a:focus {
+        border-color: rgba(255,255,255,.52);
+        background: rgba(255,255,255,.29);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 2px 4px rgba(0,0,0,.22);
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.disabled > a {
+        opacity: .45;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li > a .red-ui-popover-key {
+        display: inline-block !important;
+        margin-left: 5px;
+        padding: 0 4px;
+        border: 1px solid rgba(255,255,255,.34);
+        border-radius: 4px;
+        background: rgba(0,0,0,.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        font-size: 9px;
+        font-weight: normal;
+        line-height: 14px;
+        opacity: .62;
+        vertical-align: middle;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li > ul {
+        display: none;
+        position: absolute !important;
+        top: 32px !important;
+        left: 0 !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        z-index: 20;
+        width: max-content;
+        min-width: 100%;
+        max-width: none;
+    }
+
+    /* Entries inside More are vertical dropdown entries again. Any submenu
+       they own opens back into the available screen area on the left. */
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul > li {
+        position: relative;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul > li > ul {
+        position: absolute !important;
+        top: 0 !important;
+        right: 100% !important;
+        left: auto !important;
+        margin: 0 !important;
+        z-index: 21;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul > li:hover > ul,
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul > li:focus-within > ul {
+        display: block !important;
+    }
+
+    /* Node-RED's vertical submenu class draws a left-pointing marker. The
+       horizontal root uses the small caret on the right instead. */
+    #red-ui-topmenu > .red-ui-menu > li > a::before,
+    #red-ui-topmenu > .red-ui-menu > li > a::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-open > ul {
+        display: block !important;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li:hover > ul,
+    #red-ui-topmenu > .red-ui-menu > li:focus-within > ul {
+        display: block !important;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul {
+        left: auto !important;
+        right: 0 !important;
+        top: 32px !important;
+        bottom: auto !important;
+        transform: none !important;
+        max-height: calc(100vh - 44px);
+        overflow: visible;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown li > a .red-ui-popover-key {
+        font-size: 10px;
+        line-height: 20px;
+        margin-top: 0;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown > li.red-ui-menu-divider {
+        box-sizing: border-box;
+        height: 1px !important;
+        min-height: 1px !important;
+        margin: 2px 0 !important;
+        padding: 0 !important;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown,
+    #red-ui-topmenu .red-ui-menu-dropdown li,
+    #red-ui-topmenu .red-ui-menu-dropdown li > a,
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-label,
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-label-container,
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-sublabel {
+        white-space: nowrap !important;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown {
+        width: max-content;
+        max-width: none;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-label,
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-label-container,
+    #red-ui-topmenu .red-ui-menu-dropdown .red-ui-menu-sublabel {
+        width: auto;
+        max-width: none !important;
+    }
+
+    #red-ui-topmenu .red-ui-menu-dropdown li > a {
+        width: auto;
+        min-width: max-content;
+    }
+
+    #red-ui-topmenu .topmenu-caret {
+        margin-left: 4px;
+        font-size: 10px;
+        opacity: .75;
+    }
+
+    #red-ui-topmenu > .red-ui-menu > li.topmenu-more > ul > li > a > .topmenu-caret {
+        flex: 0 0 auto;
+        margin-right: 6px;
+        margin-left: 0;
+    }
+
+    /* Flow tabs become a row above the chart, between the two sidebars. */
+    #red-ui-workspace.topmenu-workspace {
+        display: block !important;
+        position: relative !important;
+        min-width: 0;
+        min-height: 0;
+    }
+
+    #red-ui-workspace.topmenu-workspace > #red-ui-header-tabs {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: auto !important;
+        left: 0 !important;
+        box-sizing: border-box;
+        width: 100% !important;
+        height: 35px;
+        z-index: 5;
+    }
+
+    #red-ui-workspace.topmenu-workspace > #red-ui-workspace-chart {
+        position: absolute !important;
+        top: 35px !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0;
+    }
+
+    #red-ui-workspace.topmenu-workspace > #red-ui-workspace-scroll-v,
+    #red-ui-main-container > #red-ui-workspace-scroll-v {
+        top: 37px !important;
+        bottom: 0 !important;
+        height: auto !important;
+    }
+
+    #red-ui-main-container > #red-ui-sidebar-container {
+        top: 35px !important;
+        bottom: 0 !important;
+        height: auto !important;
+    }
+
+    @media (max-width: 520px) {
+        #red-ui-topmenu { margin-left: 0; margin-right: 0; }
+        #red-ui-topmenu > .red-ui-menu > li > a { padding-left: 7px; padding-right: 7px; }
+    }
+</style>
+
+<script type="text/javascript">
+(function() {
+    "use strict";
+
+    var state = {
+        started: false,
+        arranging: false,
+        menu: null,
+        more: null,
+        moreMenu: null,
+        nav: null,
+        resizeObserver: null,
+        mutationObserver: null,
+        raf: 0
+    };
+
+    function scheduleLayout() {
+        if (!state.started || state.raf) { return; }
+        state.raf = window.requestAnimationFrame(function() {
+            state.raf = 0;
+            arrangeMenu();
+        });
+    }
+
+    function isManagedItem(item) {
+        return item && item.nodeType === 1 && item !== state.more;
+    }
+
+    function closeMenus(except) {
+        if (!state.menu) { return; }
+        Array.prototype.forEach.call(state.menu.children, function(item) {
+            var submenu = item.querySelector(":scope > ul");
+            if (item !== except) {
+                item.classList.remove("topmenu-open");
+                var link = item.querySelector(":scope > a");
+                if (link) { link.setAttribute("aria-expanded", "false"); }
+                if (submenu) { submenu.style.setProperty("display", "none"); }
+            } else if (submenu) {
+                /* Clear any state left by Node-RED before CSS/class opens it. */
+                submenu.style.removeProperty("display");
+            }
+        });
+    }
+
+    function decorateItem(item) {
+        if (!isManagedItem(item) && item !== state.more) { return; }
+        var link = item.querySelector(":scope > a");
+        var submenu = item.querySelector(":scope > ul");
+        if (!link || !submenu) { return; }
+        item.classList.remove("pull-left", "pull-right");
+        link.setAttribute("aria-haspopup", "true");
+        link.setAttribute("aria-expanded", "false");
+        if (!link.querySelector(":scope > .topmenu-caret")) {
+            var caret = document.createElement("i");
+            caret.className = "fa fa-caret-down topmenu-caret";
+            caret.setAttribute("aria-hidden", "true");
+            link.appendChild(caret);
+        }
+    }
+
+    function restoreItems() {
+        var fragment = document.createDocumentFragment();
+        Array.prototype.slice.call(state.moreMenu.children).forEach(function(item) {
+            fragment.appendChild(item);
+        });
+        state.menu.insertBefore(fragment, state.more);
+    }
+
+    function updateItemDirections() {
+        Array.prototype.forEach.call(state.menu.children, function(item) {
+            if (item === state.more) { return; }
+            var link = item.querySelector(":scope > a");
+            var caret = item.querySelector(":scope > a > .topmenu-caret");
+            if (!link || !caret) { return; }
+            caret.classList.remove("fa-caret-left");
+            caret.classList.add("fa-caret-down");
+            link.appendChild(caret);
+        });
+        Array.prototype.forEach.call(state.moreMenu.children, function(item) {
+            var link = item.querySelector(":scope > a");
+            var caret = item.querySelector(":scope > a > .topmenu-caret");
+            if (!link || !caret) { return; }
+            caret.classList.remove("fa-caret-down");
+            caret.classList.add("fa-caret-left");
+            link.insertBefore(caret, link.firstChild);
+        });
+    }
+
+    function overflows() {
+        return state.menu.scrollWidth > state.nav.clientWidth + 1;
+    }
+
+    function tidyMoreDividers() {
+        var children = Array.prototype.slice.call(state.moreMenu.children);
+        children.forEach(function(item, index) {
+            if (!item.classList.contains("red-ui-menu-divider")) { return; }
+            item.style.display = (index === 0 || index === children.length - 1 ||
+                children[index - 1].classList.contains("red-ui-menu-divider")) ? "none" : "";
+        });
+    }
+
+    function arrangeMenu() {
+        if (!state.started || state.arranging || !state.nav.clientWidth) { return; }
+        state.arranging = true;
+        restoreItems();
+        state.more.style.display = "none";
+
+        if (overflows()) {
+            state.more.style.display = "block";
+            while (overflows()) {
+                var candidate = state.more.previousElementSibling;
+                if (!candidate || candidate === state.more) { break; }
+                state.moreMenu.insertBefore(candidate, state.moreMenu.firstChild);
+            }
+        }
+
+        tidyMoreDividers();
+        updateItemDirections();
+        closeMenus();
+        /* Discard records generated by our own DOM moves. Without this, the
+           observer would schedule another identical layout every frame. */
+        if (state.mutationObserver) { state.mutationObserver.takeRecords(); }
+        state.arranging = false;
+    }
+
+    function createMoreItem() {
+        var item = document.createElement("li");
+        item.className = "red-ui-menu-dropdown-submenu topmenu-more";
+        item.style.display = "none";
+
+        var link = document.createElement("a");
+        link.href = "#";
+        link.innerHTML = '<span class="red-ui-menu-label"><span>More</span></span>';
+        item.appendChild(link);
+
+        var submenu = document.createElement("ul");
+        submenu.className = "red-ui-menu red-ui-menu-dropdown red-ui-menu-dropdown-noicons";
+        item.appendChild(submenu);
+        return item;
+    }
+
+    function handleMenuClick(event) {
+        var link = event.target.closest("a");
+        if (!link || !state.menu.contains(link)) { return; }
+        var item = link.parentElement;
+        var submenu = item && item.querySelector(":scope > ul");
+
+        /* Only control roots. Node-RED keeps control of every actual action and nested menu. */
+        if (item && item.parentElement === state.menu && submenu) {
+            event.preventDefault();
+            event.stopPropagation();
+            var opening = !item.classList.contains("topmenu-open");
+            closeMenus(item);
+            item.classList.toggle("topmenu-open", opening);
+            link.setAttribute("aria-expanded", opening ? "true" : "false");
+        } else if (!submenu) {
+            closeMenus();
+        }
+    }
+
+    function handleMenuHover(event) {
+        var item = event.target.closest("li");
+        if (!item || !state.menu.contains(item)) { return; }
+
+        /* Resolve nested More entries back to their root top-menu button. */
+        while (item.parentElement !== state.menu) {
+            item = item.parentElement.closest("li");
+            if (!item) { return; }
+        }
+
+        if (event.relatedTarget && item.contains(event.relatedTarget)) { return; }
+        closeMenus(item);
+    }
+
+    function start() {
+        if (state.started) { return true; }
+        var header = document.getElementById("red-ui-header");
+        var logo = document.getElementById("red-ui-header-logo");
+        var toolbar = document.getElementById("red-ui-header-toolbar");
+        var hamburger = document.getElementById("red-ui-header-button-sidemenu");
+        var menu = document.getElementById("red-ui-header-button-sidemenu-submenu");
+        var tabs = document.getElementById("red-ui-header-tabs");
+        var workspace = document.getElementById("red-ui-workspace");
+        if (!header || !logo || !toolbar || !hamburger || !menu || !tabs || !workspace) {
+            return false;
+        }
+
+        state.started = true;
+        state.menu = menu;
+        state.more = createMoreItem();
+        state.moreMenu = state.more.querySelector("ul");
+        state.nav = document.createElement("nav");
+        state.nav.id = "red-ui-topmenu";
+        state.nav.setAttribute("aria-label", hamburger.getAttribute("aria-label") || "Main menu");
+
+        header.classList.add("topmenu-active");
+        workspace.classList.add("topmenu-workspace");
+        menu.removeAttribute("style");
+        menu.classList.remove(
+            "pull-left",
+            "pull-right",
+            "red-ui-menu-dropdown",
+            "red-ui-menu-dropdown-noicons",
+            "red-ui-menu-dropdown-submenus"
+        );
+        menu.setAttribute("role", "menubar");
+        menu.appendChild(state.more);
+        Array.prototype.forEach.call(menu.children, decorateItem);
+        state.nav.appendChild(menu);
+        header.insertBefore(state.nav, toolbar);
+        workspace.insertBefore(tabs, workspace.firstChild);
+        hamburger.parentElement.style.display = "none";
+
+        state.nav.addEventListener("click", handleMenuClick, true);
+        state.nav.addEventListener("mouseover", handleMenuHover);
+        document.addEventListener("click", function(event) {
+            if (!state.nav.contains(event.target)) { closeMenus(); }
+        });
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") { closeMenus(); }
+        });
+
+        state.resizeObserver = new ResizeObserver(scheduleLayout);
+        state.resizeObserver.observe(state.nav);
+        state.resizeObserver.observe(toolbar);
+
+        state.mutationObserver = new MutationObserver(function(mutations) {
+            if (state.arranging) { return; }
+            mutations.forEach(function(mutation) {
+                Array.prototype.forEach.call(mutation.addedNodes, function(node) {
+                    if (isManagedItem(node) && node.parentElement === state.menu) {
+                        state.menu.insertBefore(node, state.more);
+                        decorateItem(node);
+                    }
+                });
+            });
+            scheduleLayout();
+        });
+        state.mutationObserver.observe(menu, { childList: true });
+
+        scheduleLayout();
+        window.setTimeout(scheduleLayout, 250);
+        return true;
+    }
+
+    function waitForEditor() {
+        if (start()) { return; }
+        var observer = new MutationObserver(function() {
+            if (start()) { observer.disconnect(); }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        window.setTimeout(function() { observer.disconnect(); start(); }, 15000);
+    }
+
+    RED.plugins.registerPlugin("topmenu", {
+        type: "topmenu",
+        onadd: waitForEditor
+    });
+})();
+</script>
