@@ -7,6 +7,8 @@ Top Menu places Node-RED's main menu in a horizontal bar at the top of the edito
 ## Features
 
 - Moves the native main menu between the Node-RED logo and editor toolbar.
+<img width="1917" height="534" alt="topmenu" src="https://github.com/user-attachments/assets/11cab46c-8e00-48fe-9501-096217256efe" />
+
 - Keeps third-party and plugin-provided menu items.
 - Moves the flow-tab bar into the workspace and keeps Deploy at the top right.
 - Places menu items that do not fit inside a responsive **More** menu.
