@@ -1,28 +1,31 @@
-# node-red-contrib-topmenu
+# Top Menu
 
-A Node-RED editor plugin that replaces the hamburger menu with a horizontal menu at the top of the editor.
+`node-red-contrib-topmenu`
 
-It provides quicker and easier access to actions, settings and other menu items. Although it adds a little more visual clutter, it also gives the Node-RED editor a layout similar to many other development environments.
+Top Menu places Node-RED's main menu in a horizontal bar at the top of the editor. It provides quicker access to existing menu commands while retaining menu items added by Node-RED and other plugins.
 
-The plugin does not recreate or hard-code any Node-RED menu entries. It reuses the original menu, preserving existing IDs, actions, disabled states, toggles, translations, nested menus and entries added by other editor plugins.
+## Features
 
-<img width="855" height="246" alt="Node-RED editor with the horizontal top menu enabled" src="https://github.com/user-attachments/assets/7ebb0564-c75c-4c73-8f77-567f1c8d79fd" />
+- Moves the native main menu between the Node-RED logo and editor toolbar.
+- Keeps third-party and plugin-provided menu items.
+- Moves the flow-tab bar into the workspace and keeps Deploy at the top right.
+- Places menu items that do not fit inside a responsive **More** menu.
+- Supports nested dropdowns inside the main bar and **More** menu.
 
-## How it works
+## Behaviour
 
-Node-RED creates its main menu inside `#red-ui-header-button-sidemenu-submenu`. The plugin waits for the editor header to load, then moves that same menu between the Node-RED logo and the editor toolbar. It removes the original dropdown presentation and hides the hamburger button.
+Hover a menu item to open its dropdown. Moving to another dropdown closes the previous branch, including a dropdown that was pinned open with a click.
 
-The existing flow-tab bar is moved into `#red-ui-workspace` as a 35-pixel-high row. The workspace canvas, vertical scrollbar and right sidebar are then repositioned so they sit correctly below it.
+Clicking a menu item keeps its dropdown open until another menu branch is opened or the menu is dismissed. Nested entries inside **More** open toward the available side and show a single direction arrow.
 
-A few other editor elements also need to be moved to make everything fit without unnecessarily reducing or shifting the workspace. The Deploy button and warning indicator are relocated to the top menu, allowing the flow-tab bar to use the full available width.
-
-The top menu automatically adjusts to the width of the browser window. It displays as many menu items as possible and places any remaining items inside a **More** dropdown.
+The menu recalculates its available width when the editor changes size. Overflowing items move into **More** and return to the main bar when space becomes available.
 
 ## Requirements
 
-* Node-RED 5.0 or newer
-* Node.js 22.9 or newer
+- Node-RED 5.0 or newer
+- Node.js 22.9 or newer
 
 ## License
 
-MIT
+Licensed under the [MIT License](LICENSE).
+

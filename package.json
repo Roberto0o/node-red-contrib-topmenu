@@ -1,36 +1,42 @@
 {
   "name": "node-red-contrib-topmenu",
-  "version": "0.3.0",
-  "description": "Moves the Node-RED main menu into a horizontal menu bar for easy access.",
-  "license": "MIT",
-  "author": "Robert0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Roberto0o/node-red-contrib-topmenu.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Roberto0o/node-red-contrib-topmenu/issues"
-  },
-  "homepage": "https://github.com/Roberto0o/node-red-contrib-topmenu#readme",
+  "version": "1.0.0",
+  "description": "Move the Node-RED main menu into a responsive horizontal menu bar for faster access.",
   "keywords": [
     "node-red",
     "node-red-plugin",
     "node-red-contrib",
     "editor",
     "menu",
-    "topmenu",
-    "top-menu",
     "menubar",
     "navigation"
   ],
-  "files": [
-    "topmenu.html",
-    "README.md",
-    "LICENSE"
-  ],
+  "homepage": "https://github.com/Roberto0o/node-red-contrib-topmenu#readme",
+  "bugs": {
+    "url": "https://github.com/Roberto0o/node-red-contrib-topmenu/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Roberto0o/node-red-contrib-topmenu.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Robert W. (Robert0)",
+    "url": "https://github.com/Roberto0o"
+  },
   "engines": {
     "node": ">=22.9"
   },
+  "scripts": {
+    "test": "node --check resources/topmenu.js"
+  },
+  "files": [
+    "topmenu.html",
+    "resources",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG"
+  ],
   "node-red": {
     "version": ">=5.0.0",
     "plugins": {
