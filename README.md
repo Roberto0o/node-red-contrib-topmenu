@@ -27,6 +27,13 @@ The menu recalculates its available width when the editor changes size. Overflow
 - Node-RED 5.0 or newer
 - Node.js 22.9 or newer
 
+## Contact
+
+Found a bug, have a suggestion, or want to discuss a plugin?
+
+- Start a topic on the [Node-RED Forum](https://discourse.nodered.org/) and tag me.
+- Join the [Discord community](https://discord.gg/5KzTRv4g3W).
+
 ## License
 
 Licensed under the [MIT License](LICENSE).
